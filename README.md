@@ -1,73 +1,92 @@
-# React + TypeScript + Vite
+# Markba Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript + Vite app with Tailwind v4, React Router, Zustand auth store, Google/GitHub OAuth, and a simple dashboard.
 
-Currently, two official plugins are available:
+**Live Demo :** 
+https://markba-task-7sij.vercel.app/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+backend github: https://github.com/shouqak/markba-backend
 
-## React Compiler
+**Tech Stack**
+- React 19, Vite 7, TypeScript 5
+- Tailwind CSS v4 (`@tailwindcss/vite` plugin)
+- React Router v6, Zustand
+- Google OAuth (`@react-oauth/google`), GitHub OAuth
+- Framer Motion, React Icons, React Hot Toast
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**Prerequisites**
+- Node.js 18+ (20+ recommended)
+- npm 9+
 
-## Expanding the ESLint configuration
+**Quick Start**
+- Clone and install deps
+  - `npm install`
+- Configure environment (see below)
+- Run locally
+  - `npm run dev` then open http://localhost:5173
+- Production build
+  - `npm run build` and `npm run preview`
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**Environment**
+- Create a `.env` file at the project root with the following variables. Note: Vite only exposes vars prefixed with `VITE_` in `import.meta.env`.
+- This project currently reads non‑prefixed names in code. For best results, set both forms to avoid confusion, or update code to use `VITE_` only.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+```
+# Backend API base (used for GitHub code exchange)
+API_URL=https://markba-backend.onrender.com
+VITE_API_URL=https://markba-backend.onrender.com
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+# Google OAuth (Client ID from Google Cloud Console)
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# GitHub OAuth (Client ID from GitHub OAuth App)
+GITHUB_CLIENT_ID=your-github-client-id
+VITE_GITHUB_CLIENT_ID=your-github-client-id
+
+# Redirect URI used in the app (defaults to window.origin + /login)
+GITHUB_REDIRECT_URI=http://localhost:5173/login
+VITE_GITHUB_REDIRECT_URI=http://localhost:5173/login
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+If you prefer to standardize on `VITE_` only, update these places:
+- `src/main.tsx:5` to read `import.meta.env.VITE_GOOGLE_CLIENT_ID`
+- `src/pages/Login.tsx:17` (`API_URL`), `src/pages/Login.tsx:19` (`GITHUB_CLIENT_ID`), `src/pages/Login.tsx:21` (`GITHUB_REDIRECT_URI`) to the `VITE_` variants
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+**OAuth Setup**
+- Google (user info via implicit flow)
+  - Go to Google Cloud Console → Credentials → Create Credentials → OAuth client ID
+  - Application type: Web application
+  - Authorized JavaScript origins:
+    - `http://localhost:5173`
+    - Your production domain
+  - Copy the Client ID into `.env` (`GOOGLE_CLIENT_ID` / `VITE_GOOGLE_CLIENT_ID`)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- GitHub (authorization code + backend exchange)
+  - Go to GitHub → Settings → Developer settings → OAuth Apps → New OAuth App
+  - Homepage URL: your site (e.g., `http://localhost:5173`)
+  - Authorization callback URL: `http://localhost:5173/login`
+  - Copy the Client ID into `.env` (`GITHUB_CLIENT_ID` / `VITE_GITHUB_CLIENT_ID`)
+  - Ensure backend `API_URL` points to your server that exchanges the `code` at `POST /auth/github`
+
+**Scripts**
+- `npm run dev` — start dev server
+- `npm run build` — type‑check and build production assets
+- `npm run preview` — preview production build
+- `npm run lint` — lint sources
+
+**Project Structure**
+- App entry: `src/main.tsx`
+- Router: `src/Router/Router.tsx`
+- Auth store: `src/store/useAuthStore.ts`
+- Pages: `src/pages/*`
+- Components: `src/components/*`
+- Styling: `src/index.css` (Tailwind v4)
+
+**Troubleshooting**
+- Env vars not taking effect: Vite only exposes `VITE_*` vars to `import.meta.env`. Either define both forms as above or update code to use `VITE_*` keys.
+- OAuth redirect mismatch: ensure Google “Authorized JavaScript origins” and GitHub “Authorization callback URL” match your actual local/prod origins.
+- OneDrive path issues on Windows: if dev server can’t serve files, try moving the project to a non‑OneDrive folder.
+
+**Deployment**
+- Vercel is pre‑configured for SPA routing via `vercel.json:2`. Set the same environment variables in your Vercel project and deploy.
